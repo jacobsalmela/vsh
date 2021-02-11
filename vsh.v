@@ -28,8 +28,6 @@ pub mut:
 }
 
 enum Movement {
-	up
-	down
 	left
 	right
 }
@@ -99,7 +97,7 @@ fn (b Buffer) view(from int, to int) View {
 		raw: raw
 		cursor: {
 			pos_x: x
-			pos_y: b.cursor.pos_y
+			// pos_y: b.cursor.pos_y
 		}
 	}
 }
@@ -158,16 +156,12 @@ fn (mut b Buffer) put(s string) {
 }
 
 fn (mut b Buffer) del(amount int) string {
-	if amount == 0 {
-		return ''
-	}
 	x, y := b.cursor.xy()
 	if amount < 0 { // don't delete left if we're at 0,0
-		if x == 0 && y == 0 {
+		// if we're at the prompt's end, stop
+		if x == 3 {
 			return ''
 		}
-	} else if x >= b.cur_line().len && y >= b.lines.len - 1 {
-		return ''
 	}
 	mut removed := ''
 	if amount < 0 { // backspace (backward)
@@ -178,33 +172,9 @@ fn (mut b Buffer) del(amount int) string {
 			ln := b.lines[li]
 			if left > ln.len {
 				b.lines.delete(li)
-				if ln.len == 0 { // line break delimiter
-					left--
-					if y == 0 {
-						return ''
-					}
-					line_above := b.lines[li - 1]
-					b.cursor.pos_x = line_above.len
-				} else {
-					left -= ln.len
-				}
-				b.cursor.pos_y--
 			} else {
-				if x == 0 {
-					if y == 0 {
-						return ''
-					}
-					line_above := b.lines[li - 1]
-					if ln.len == 0 { // at line break
-						b.lines.delete(li)
-						b.cursor.pos_y--
-						b.cursor.pos_x = line_above.len
-					} else {
-						b.lines[li - 1] = line_above + ln
-						b.lines.delete(li)
-						b.cursor.pos_y--
-						b.cursor.pos_x = line_above.len
-					}
+				if ln.len == 0 {
+					b.cursor.pos_x = 0
 				} else if x == 1 {
 					b.lines[li] = b.lines[li][left..]
 					b.cursor.pos_x = 0
@@ -223,12 +193,10 @@ fn (mut b Buffer) del(amount int) string {
 		for li := y; li >= 0 && left > 0; li++ {
 			ln := b.lines[li]
 			if x == ln.len { // at line end
-				if y + 1 <= b.lines.len {
 					b.lines[li] = ln + b.lines[y + 1]
 					b.lines.delete(y + 1)
 					left--
 					b.del(left)
-				}
 			} else if left > ln.len {
 				b.lines.delete(li)
 				left -= ln.len
@@ -236,11 +204,8 @@ fn (mut b Buffer) del(amount int) string {
 				b.lines[li] = ln[..x] + ln[x + left..]
 				left = 0
 			}
+			break
 		}
-	}
-	$if debug {
-		flat := removed.replace('\n', r'\n')
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$flat"')
 	}
 	return removed
 }
@@ -252,28 +217,18 @@ fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 		.left {
 			if b.cursor.pos_x - amount >= 0 {
 				b.cursor.move(-amount, 0)
-			} else if b.cursor.pos_y > 0 {
-				b.cursor.set(b.line(b.cursor.pos_y - 1).len, b.cursor.pos_y - 1)
 			}
 		}
 		.right {
 			if b.cursor.pos_x + amount <= cur_line.len {
 				b.cursor.move(amount, 0)
-			} else if b.cursor.pos_y + 1 < b.lines.len {
-				b.cursor.set(0, b.cursor.pos_y + 1)
 			}
-		}
-		.up {
-			println('hist back')
-		}
-		.down {
-			println('hist forward')
 		}
 	}
 }
 
-fn (vsh &Vsh) view_height() int {
-	return vsh.tui.window_height - 1
+fn (vsh &Vsh) view_width() int {
+	return vsh.tui.window_width
 }
 
 fn event(e &tui.Event, x voidptr) {
@@ -291,6 +246,9 @@ fn event(e &tui.Event, x voidptr) {
 			.enter {
 				buffer.put('\nv# ')
 			}
+			.space {
+				buffer.put(' ')
+			}
 			.backspace {
 				buffer.del(-1)
 			}
@@ -304,10 +262,10 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				buffer.put('\nhist back')
+				buffer.put('\nv# hist back')
 			}
 			.down {
-				buffer.put('\nhist fwd')
+				buffer.put('\nv# hist fwd')
 			}
 			48...57, 97...122 { // 0-9a-zA-Z
 				// buffer.put(e.utf8.bytes().bytestr())
@@ -355,7 +313,7 @@ fn frame(x voidptr) {
 	mut vsh := &Vsh(x)
 	mut cur := vsh.cur
 	vsh.tui.clear()
-	scroll_limit := vsh.view_height()
+	scroll_limit := vsh.view_width()
 	view := cur.view(vsh.viewport, scroll_limit + vsh.viewport)
 	vsh.tui.draw_text(0, 0, view.raw)
 	vsh.tui.set_cursor_position(view.cursor.pos_x + 1, cur.cursor.pos_y + 1 - vsh.viewport)
