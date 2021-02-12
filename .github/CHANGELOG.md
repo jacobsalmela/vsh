@@ -1,0 +1,2 @@
+- updated readme
+- added `.github` workflows
