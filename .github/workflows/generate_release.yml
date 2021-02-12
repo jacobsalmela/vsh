@@ -70,7 +70,7 @@ jobs:
           tag_name: ${{ steps.bump.outputs.tag }}
           release_name: ${{ steps.bump.outputs.tag }}
           draft: true
-          prerelease: false
+          prerelease: true
           body_path: ./.github/CHANGELOG.md
 
       - name: upload vsh
@@ -80,6 +80,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.AP_GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./vsh${{ steps.bump.outputs.tag }}.zip
-          asset_name: vsh${{ steps.bump.outputs.tag }}.zip
+          asset_path: ./vsh_${{ steps.bump.outputs.tag }}.zip
+          asset_name: vsh_${{ steps.bump.outputs.tag }}.zip
           asset_content_type: application/zip
