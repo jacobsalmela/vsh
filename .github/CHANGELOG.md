@@ -1,1 +1,4 @@
-- updated readme
+- updated github tag action version to 1.34
+- allow special characters to be entered
+- execute command entered
+- add some TODOs
