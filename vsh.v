@@ -289,22 +289,6 @@ fn event(e &tui.Event, x voidptr) {
 				// buffer.put(e.utf8.bytes().bytestr())
 			}
 		}
-
-
-
-	// match "$e.utf8.bytes().hex()" {
-	// 	'1b5b41' { vsh.tui.write('up') } // TODO: back in history
-	// 	'1b5b42' { vsh.tui.write('down') } // TODO: forward in history
-	// 	'1b5b43' { vsh.tui.write('right') }
-	// 	'1b5b44' { vsh.tui.write('left') }
-	// else {
-	//
-	// 	if "$e.utf8.bytes().hex()" == '0a' {
-	// 		vsh.tui.write('\nv# ')
-	// 	}
-	//
-	// }
-	// }
 	vsh.tui.flush()
 	}
 }
@@ -320,18 +304,21 @@ fn frame(x voidptr) {
 	vsh.tui.flush()
 }
 
-mut vsh := &Vsh{}
-vsh.tui = tui.init(
-	user_data: vsh
-	event_fn: event
-	init_fn: init
-	frame_fn: frame
-	window_title: 'vsh'
-	hide_cursor: false
-	capture_events: true
-	frame_rate: 120
-	use_alternate_buffer: false
-)
-println('Welcome to v shell\n')
-debug := true
-vsh.tui.run() ?
+fn main() {
+	mut vsh := &Vsh{}
+	vsh.tui = tui.init(
+		user_data: vsh
+		event_fn: event
+		init_fn: init
+		frame_fn: frame
+		window_title: 'vsh'
+		hide_cursor: false
+		capture_events: true
+		frame_rate: 120
+		use_alternate_buffer: false
+	)
+
+	println('Welcome to v shell\n')
+	debug := true
+	vsh.tui.run() ?
+}
