@@ -1,3 +1,18 @@
+// vsh.v -- Runs v shell
+
+/* This file is part of vsh, the V SHell.
+
+	MIT License
+
+	Copyright (C) 2021 Jacob Salmela <me@jacobsalmela.com>
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice (including the next paragraph) shall be included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+*/
+
 import os { input, exec, user_os }
 import term.ui as tui
 
@@ -231,6 +246,14 @@ fn (vsh &Vsh) view_width() int {
 	return vsh.tui.window_width
 }
 
+// run the command on the current line
+// fn (mut b Buffer) exec() (string) {
+// 	cur_line := b.cur_line()
+// 	// stdout := os.exec(cur_line) or { panic(err) }
+// 	// b.put(stdout.output.str())
+// 	return cur_line.str()
+// }
+
 fn event(e &tui.Event, x voidptr) {
 	mut vsh := &Vsh(x)
 	mut buffer := vsh.cur
@@ -244,7 +267,18 @@ fn event(e &tui.Event, x voidptr) {
 				exit(0)
 			}
 			.enter {
-				buffer.put('\nv# ')
+				// get what's on the current line
+				cur_line := buffer.cur_line()
+				// the command is anything that's not our prompt
+				// TODO: use a var and don't hard code this, the prompt will be variable in length
+				cmd := buffer.cur_line()[3..]
+				// run the command the user entered
+				// TODO: move this to a function and make it more resilient
+				output := os.exec(cmd) or { panic(err) }
+				// display it's output
+				buffer.put('\n$output.output')
+				// return the prompt so another command can be entered
+				buffer.put('v# ')
 			}
 			.space {
 				buffer.put(' ')
@@ -267,8 +301,15 @@ fn event(e &tui.Event, x voidptr) {
 			.down {
 				buffer.put('\nv# hist fwd')
 			}
-			48...57, 97...122 { // 0-9a-zA-Z
+			48...57, 65...90, 97...122 { // 0-9, A-Z, a-z
 				// buffer.put(e.utf8.bytes().bytestr())
+				buffer.put(e.ascii.ascii_str())
+			}
+			33...47, 58...64, 91...96, 123...126  { // special characters
+																							// !"#$%a'-./
+																							// :;<=>?@
+																							// [\]^_`
+																							// {\}~
 				buffer.put(e.ascii.ascii_str())
 			}
 		else {
