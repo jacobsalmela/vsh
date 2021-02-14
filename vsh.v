@@ -13,8 +13,9 @@
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import os { input, exec, user_os }
+import os { input, exec, user_os, join_path home_dir }
 import term.ui as tui
+import v_history as vhist
 
 struct Vsh {
 mut:
@@ -81,8 +82,8 @@ fn init(x voidptr) {
 fn (mut vsh Vsh) init_shell() {
 	vsh.cur = &Buffer{}
 	// initial cursor position
-	mut init_y := 0
-	mut init_x := 0
+	// mut init_y := 0
+	// mut init_x := 0
 	vsh.cur.put('Welcome to v shell')
 	vsh.cur.put('\nv# ')
 }
@@ -267,16 +268,26 @@ fn event(e &tui.Event, x voidptr) {
 				exit(0)
 			}
 			.enter {
-				// get what's on the current line
-				cur_line := buffer.cur_line()
 				// the command is anything that's not our prompt
 				// TODO: use a var and don't hard code this, the prompt will be variable in length
 				cmd := buffer.cur_line()[3..]
+
 				// run the command the user entered
-				// TODO: move this to a function and make it more resilient
+				// TODO: move this all to a function and make it more resilient
 				output := os.exec(cmd) or { panic(err) }
+
+				// append command to .v_history
+				histfile := os.join_path(os.home_dir(), '.v_history')
+
+				// create .v_history if it doesn't exist
+				vhist.create(histfile)
+
+				// append each command to the file
+				vhist.append(cmd, histfile)
+
 				// display it's output
 				buffer.put('\n$output.output')
+
 				// return the prompt so another command can be entered
 				buffer.put('v# ')
 			}
@@ -360,6 +371,6 @@ fn main() {
 	)
 
 	println('Welcome to v shell\n')
-	debug := true
+	// debug := true
 	vsh.tui.run() ?
 }
