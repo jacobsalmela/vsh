@@ -1,7 +1,7 @@
 name: vlang-build-pipeline
 
 on:
-  push:
+  pull_request:
     paths-ignore:
       - '**.md'
 
