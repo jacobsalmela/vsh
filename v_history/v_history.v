@@ -25,5 +25,19 @@ pub fn append(command string, f string) {
 	mut hist_file := os.open_append(f) or { panic(err) }
 
 	// write the command to the history file
-	hist_file.writeln(command.str()) or { panic(err) }
+	hist_file.writeln(command) or { panic(err) }
+	// hist_file.close()
+}
+
+pub fn back(f string) ([]string) {
+	// open the file
+	mut hist_file := os.read_lines(f) or { panic(err) }
+
+
+	return hist_file
+	// read file
+	// mut buf := []byte
+	// hist_line := hist_file.read_at(3, mut buf) or { panic(err) }
+
+	// return hist_line
 }

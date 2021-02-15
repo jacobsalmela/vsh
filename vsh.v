@@ -307,7 +307,9 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				buffer.put('\nv# hist back')
+				hist_file := os.join_path(os.home_dir(), '.v_history')
+				prev := vhist.back(hist_file)
+				buffer.put('\nv# $prev')
 			}
 			.down {
 				buffer.put('\nv# hist fwd')

@@ -1,1 +1,3 @@
-- create and append to `~/.v_history` file
+- create and append to `~/.v_history` file (doesn't fully work as expected yet)
+- only test on PRs
+- update readme (link to Project)
