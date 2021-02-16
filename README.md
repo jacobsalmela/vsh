@@ -1,5 +1,13 @@
-# vsh
-A new shell written in Vlang, optimized for software engineering.
+<p align="center">
+    <a href="https://jacobsalmela.com/">
+        <img src="https://user-images.githubusercontent.com/3843505/108062431-64a89900-701f-11eb-825c-7948c1bc6c62.png" width="250" height="250" alt="vshell">
+    </a>
+    <br>
+    <strong>Vshell</strong><br>
+    A new shell written in Vlang, optimized for software engineering.
+</p>
+
+
 
 ## Current State
 
