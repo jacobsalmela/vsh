@@ -1,0 +1,8 @@
+.DS_Store
+assets/*.afdesign
+assets/*afphoto
+assets/*.ai
+assets/*.eps
+assets/*.jpg
+assets/*.ps
+
