@@ -15,12 +15,16 @@
 
 import os { input, exec, user_os, join_path home_dir }
 import term.ui as tui
-import v_history as vhist
+import io
+import time
+
+// import v_history as vhist
 
 struct Vsh {
 mut:
 	tui           &tui.Context  = 0
 	cur           &Buffer       = 0
+	hist        	os.File
 	magnet_x      int
 	viewport      int
 }
@@ -81,10 +85,8 @@ fn init(x voidptr) {
 
 fn (mut vsh Vsh) init_shell() {
 	vsh.cur = &Buffer{}
-	// initial cursor position
-	// mut init_y := 0
-	// mut init_x := 0
-	vsh.cur.put('Welcome to v shell')
+	vsh.hist = os.open_append(os.join_path(os.home_dir(), '.v_history')) or { panic(err) }
+	vsh.cur.put('Welcome to v shell!')
 	vsh.cur.put('\nv# ')
 }
 
@@ -247,17 +249,10 @@ fn (vsh &Vsh) view_width() int {
 	return vsh.tui.window_width
 }
 
-// run the command on the current line
-// fn (mut b Buffer) exec() (string) {
-// 	cur_line := b.cur_line()
-// 	// stdout := os.exec(cur_line) or { panic(err) }
-// 	// b.put(stdout.output.str())
-// 	return cur_line.str()
-// }
-
 fn event(e &tui.Event, x voidptr) {
 	mut vsh := &Vsh(x)
 	mut buffer := vsh.cur
+	mut h := vsh.hist
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
 
@@ -276,14 +271,8 @@ fn event(e &tui.Event, x voidptr) {
 				// TODO: move this all to a function and make it more resilient
 				output := os.exec(cmd) or { panic(err) }
 
-				// append command to .v_history
-				histfile := os.join_path(os.home_dir(), '.v_history')
-
-				// create .v_history if it doesn't exist
-				vhist.create(histfile)
-
-				// append each command to the file
-				vhist.append(cmd, histfile)
+				// write the command to the history file
+				h.writeln(cmd) or { panic(err) }
 
 				// display it's output
 				buffer.put('\n$output.output')
@@ -307,9 +296,11 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				hist_file := os.join_path(os.home_dir(), '.v_history')
-				prev := vhist.back(hist_file)
-				buffer.put('\nv# $prev')
+				mut history := io.new_buffered_reader(reader: io.make_reader(h))
+				for {
+					l := history.read_line() or { break }
+					buffer.put('\nv# $l')
+				}
 			}
 			.down {
 				buffer.put('\nv# hist fwd')
