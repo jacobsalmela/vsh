@@ -16,9 +16,7 @@
 import os { input, exec, user_os, join_path home_dir }
 import term.ui as tui
 import io
-import time
-
-// import v_history as vhist
+// import builtins
 
 struct Vsh {
 mut:
@@ -267,18 +265,31 @@ fn event(e &tui.Event, x voidptr) {
 				// TODO: use a var and don't hard code this, the prompt will be variable in length
 				cmd := buffer.cur_line()[3..]
 
-				// run the command the user entered
-				// TODO: move this all to a function and make it more resilient
-				output := os.exec(cmd) or { panic(err) }
+				// split with a delimeter of space and then grab the first entry to see if it should be a builtin command
+				is_builtin := cmd.split(' ')[0]
+				// get the rest of the string which will be the args
+				cmd_args := cmd.split(' ')[1..]
+				match is_builtin {
+					// only use the first arg since you can't be in two dirs at once
+					'cd' { os.chdir(cmd.split(' ')[1])
+								 buffer.put('v# ') }
+					'pwd' { buffer.put('\n$os.getwd()\n')
+				 					buffer.put('v# ')}
+				else {
+					// run the command the user entered
+					// TODO: move this all to a function and make it more resilient
+					output := os.exec(cmd) or { panic(err) }
 
-				// write the command to the history file
-				h.writeln(cmd) or { panic(err) }
+					// write the command to the history file
+					h.writeln(cmd) or { panic(err) }
 
-				// display it's output
-				buffer.put('\n$output.output')
+					// display it's output
+					buffer.put('\n$output.output')
 
-				// return the prompt so another command can be entered
-				buffer.put('v# ')
+					// return the prompt so another command can be entered
+					buffer.put('v# ')
+					}
+				}
 			}
 			.space {
 				buffer.put(' ')
