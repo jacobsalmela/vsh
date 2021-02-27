@@ -278,7 +278,11 @@ fn event(e &tui.Event, x voidptr) {
 				else {
 					// run the command the user entered
 					// TODO: move this all to a function and make it more resilient
-					output := os.exec(cmd) or { panic(err) }
+					output := os.exec(cmd) or {
+						buffer.put('\n$err')
+						buffer.put('v# ')
+						return
+					}
 
 					// write the command to the history file
 					h.writeln(cmd) or { panic(err) }
