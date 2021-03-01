@@ -22,8 +22,6 @@ struct Vsh {
 mut:
 	tui           &tui.Context  = 0
 	cur           &Buffer       = 0
-	hist_append   os.File
-	hist_read    	os.File
 	magnet_x      int
 	viewport      int
 }
@@ -84,14 +82,6 @@ fn init(x voidptr) {
 
 fn (mut vsh Vsh) init_shell() {
 	vsh.cur = &Buffer{}
-	vsh.hist_append = os.open_append(os.join_path(os.home_dir(), '.v_history')) or {
-		vsh.cur.put('\nv# $err')
-		return
-	}
-	vsh.hist_read = os.open(os.join_path(os.home_dir(), '.v_history')) or {
-		vsh.cur.put('\nv# $err')
-		return
-	}
 	vsh.cur.put('Welcome to v shell!')
 	vsh.cur.put('\nv# ')
 }
@@ -258,10 +248,18 @@ fn (vsh &Vsh) view_width() int {
 fn event(e &tui.Event, x voidptr) {
 	mut vsh := &Vsh(x)
 	mut buffer := vsh.cur
-	mut append_h := vsh.hist_append
-	defer { append_h.close() }
-	mut read_h := vsh.hist_read
-	defer { read_h.close() }
+    
+	mut hist_append := os.open_append(os.join_path(os.home_dir(), '.v_history')) or {
+		vsh.cur.put('\nv# $err')
+		return
+	}
+	mut hist_read := os.open(os.join_path(os.home_dir(), '.v_history')) or {
+		vsh.cur.put('\nv# $err')
+		return
+	}    
+	defer { hist_append.close() }
+	defer { hist_read.close() }
+    
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
 
@@ -296,7 +294,7 @@ fn event(e &tui.Event, x voidptr) {
 					}
 
 					// write the command to the history file
-					append_h.writeln(cmd) or { panic(err) }
+					hist_append.writeln(cmd) or { panic(err) }
 
 					// display it's output
 					buffer.put('\n$output.output')
@@ -322,7 +320,7 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				mut history := io.new_buffered_reader(reader: io.make_reader(read_h))
+				mut history := io.new_buffered_reader(reader: io.make_reader(hist_read))
 				buffer.put('\nv# $history')
 				for {
 					l := history.read_line() or {
