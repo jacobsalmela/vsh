@@ -12,8 +12,8 @@
 ## Current State
 
 - `vsh` will run commands on the local system when you press enter
-- `vsh` currently panics if the command doesn't exist
 - commands are appended to `.v_history`
+- simple up/down partial functionality
 
 ## Contributing
 

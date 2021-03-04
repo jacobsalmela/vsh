@@ -1,3 +1,3 @@
-- create and append to `~/.v_history` file (doesn't fully work as expected yet)
-- only test on PRs
-- update readme (link to Project)
+- print first line of history on up arrow
+- fix appending and reading the same file, thanks to @spytheman
+- update readme
