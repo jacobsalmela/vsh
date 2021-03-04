@@ -248,7 +248,7 @@ fn (vsh &Vsh) view_width() int {
 fn event(e &tui.Event, x voidptr) {
 	mut vsh := &Vsh(x)
 	mut buffer := vsh.cur
-    
+
 	mut hist_append := os.open_append(os.join_path(os.home_dir(), '.v_history')) or {
 		vsh.cur.put('\nv# $err')
 		return
@@ -256,10 +256,10 @@ fn event(e &tui.Event, x voidptr) {
 	mut hist_read := os.open(os.join_path(os.home_dir(), '.v_history')) or {
 		vsh.cur.put('\nv# $err')
 		return
-	}    
+	}
 	defer { hist_append.close() }
 	defer { hist_read.close() }
-    
+
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
 
@@ -320,16 +320,16 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
+				mut amount := buffer.cur_line().len
+				// buffer.put('$amount')
+				buffer.del(-amount)
 				mut history := io.new_buffered_reader(reader: io.make_reader(hist_read))
-				buffer.put('\nv# $history')
-				for {
-					l := history.read_line() or {
-						buffer.put('\nv# $err')
-						buffer.put('v# ')
-						return
-					}
-					buffer.put('\nv# $l')
+				l := history.read_line() or {
+					buffer.put('v# $err')
+					// buffer.put('v# ')
+					return
 				}
+				buffer.put('v# $l')
 			}
 			.down {
 				buffer.put('\nv# hist fwd')
