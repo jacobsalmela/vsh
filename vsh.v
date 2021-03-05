@@ -16,7 +16,6 @@
 import os { input, exec, user_os, join_path home_dir }
 import term.ui as tui
 import io
-// import builtins
 
 struct Vsh {
 mut:
@@ -253,12 +252,19 @@ fn event(e &tui.Event, x voidptr) {
 		vsh.cur.put('\nv# $err')
 		return
 	}
+
+	defer { hist_append.close() }
+
 	mut hist_read := os.open(os.join_path(os.home_dir(), '.v_history')) or {
 		vsh.cur.put('\nv# $err')
 		return
 	}
-	defer { hist_append.close() }
+
 	defer { hist_read.close() }
+
+	// read the history file into a buffer
+	// it will be used later with the up/down arrows to view the command history
+	mut history := io.new_buffered_reader(reader: io.make_reader(hist_read))
 
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
@@ -293,8 +299,12 @@ fn event(e &tui.Event, x voidptr) {
 						return
 					}
 
-					// write the command to the history file
-					hist_append.writeln(cmd) or { panic(err) }
+					// only save the command to history if it's not a blank line
+					// (example: the user just pressing enter won't append blank lines to the history file)
+					if cmd != '' {
+						// write the command to the history file
+						hist_append.writeln(cmd) or { panic(err) }
+					}
 
 					// display it's output
 					buffer.put('\n$output.output')
@@ -320,16 +330,25 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				mut amount := buffer.cur_line().len
-				// buffer.put('$amount')
-				buffer.del(-amount)
-				mut history := io.new_buffered_reader(reader: io.make_reader(hist_read))
-				l := history.read_line() or {
-					buffer.put('v# $err')
-					// buffer.put('v# ')
-					return
+				for {
+					// get the length of the current line
+					mut amount := buffer.cur_line().len
+					// read a line of history or show an error
+					l := history.read_line() or {
+						buffer.put('$err')
+						return
+					}
+
+					// this is the length of the current prompt 'v# '
+					if amount == 3 {
+						// show the line of history
+						buffer.put('v# $l')
+					} else {
+						// delete the entire line
+						buffer.del(-amount)
+						buffer.put('v# $l')
+					}
 				}
-				buffer.put('v# $l')
 			}
 			.down {
 				buffer.put('\nv# hist fwd')
@@ -392,7 +411,6 @@ fn main() {
 		use_alternate_buffer: false
 	)
 
-	println('Welcome to v shell\n')
 	// debug := true
 	vsh.tui.run() ?
 }
