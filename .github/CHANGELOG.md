@@ -1,3 +1,2 @@
-- print first line of history on up arrow
-- fix appending and reading the same file, thanks to @spytheman
-- update readme
+- show last line of history on up arrow
+- don't append blank lines to history file
