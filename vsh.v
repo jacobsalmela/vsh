@@ -255,17 +255,6 @@ fn event(e &tui.Event, x voidptr) {
 
 	defer { hist_append.close() }
 
-	mut hist_read := os.open(os.join_path(os.home_dir(), '.v_history')) or {
-		vsh.cur.put('\nv# $err')
-		return
-	}
-
-	defer { hist_read.close() }
-
-	// read the history file into a buffer
-	// it will be used later with the up/down arrows to view the command history
-	mut history := io.new_buffered_reader(reader: io.make_reader(hist_read))
-
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
 
@@ -330,23 +319,55 @@ fn event(e &tui.Event, x voidptr) {
 				buffer.move_cursor(1, .right)
 			}
 			.up {
-				for {
-					// get the length of the current line
-					mut amount := buffer.cur_line().len
-					// read a line of history or show an error
-					l := history.read_line() or {
-						buffer.put('$err')
-						return
-					}
+				// open the history file
+				h_file := os.join_path(os.home_dir(), '.v_history').str()
+				hist := os.read_file(h_file) or { panic(err) }
 
-					// this is the length of the current prompt 'v# '
-					if amount == 3 {
-						// show the line of history
-						buffer.put('v# $l')
-					} else {
-						// delete the entire line
-						buffer.del(-amount)
-						buffer.put('v# $l')
+				// get the length of the current line
+				mut amount := buffer.cur_line().len
+
+				// iterator for looping through history file
+				mut i := 0
+
+				// length of the history array
+				mut cnt := hist.len
+
+				// var for the command to be displayed to the user
+				mut cmd := ''
+
+				// this is the length of the current prompt 'v# '
+				if amount == 3 {
+					// show the line of history
+					// translated to v for this functionality: https://www.includehelp.com/c-programs/c-program-to-print-contents-in-reverse-order-of-a-file-like-tac-command-in-linux.aspx
+					// loops through each character in the history file
+					for l in hist.bytes().reverse() {
+						// add the character to the command var
+						cmd += l.ascii_str()
+						// if we hit a newline, the command is complete, but backwards
+						if l.ascii_str() == '\n' {
+							// subtract from the length of the array
+							cnt--
+							// increment the loop
+							i++
+							// display the command in reverse (which shows it correctly)
+							buffer.put('v# $cmd.reverse()')
+							// clear the command var for the next command
+							cmd = ''
+						}
+						break
+					}
+				} else {
+					// delete the entire line
+					buffer.del(-amount)
+					// TODO: Make this into a function since it's the same as above
+					for l in hist.bytes().reverse() {
+						cmd += l.ascii_str()
+						if l.ascii_str() == '\n' {
+							cnt--
+							i++
+							buffer.put('v# $cmd.reverse('))
+							cmd = ''
+						}
 					}
 				}
 			}
