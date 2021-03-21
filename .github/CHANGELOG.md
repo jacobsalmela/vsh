@@ -1,2 +1,1 @@
-- show last line of history on up arrow
-- don't append blank lines to history file
+- read hist file in reverse in a loop so we can eventually cycle through them on each subsequent up arrow
