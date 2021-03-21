@@ -350,7 +350,7 @@ fn event(e &tui.Event, x voidptr) {
 							// increment the loop
 							i++
 							// display the command in reverse (which shows it correctly)
-							buffer.put('v# $cmd.reverse()')
+							buffer.put('v# ${cmd.reverse()}')
 							// clear the command var for the next command
 							cmd = ''
 						}
@@ -365,7 +365,7 @@ fn event(e &tui.Event, x voidptr) {
 						if l.ascii_str() == '\n' {
 							cnt--
 							i++
-							buffer.put('v# $cmd.reverse('))
+							buffer.put('v# ${cmd.reverse()}')
 							cmd = ''
 						}
 					}
