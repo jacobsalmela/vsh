@@ -13,7 +13,7 @@
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-import os { input, exec, user_os, join_path home_dir }
+import os { input, execute, user_os, join_path home_dir }
 import term.ui as tui
 import io
 
@@ -282,7 +282,7 @@ fn event(e &tui.Event, x voidptr) {
 				else {
 					// run the command the user entered
 					// TODO: move this all to a function and make it more resilient
-					output := os.exec(cmd) or {
+					output := os.execute(cmd) or {
 						buffer.put('\n$err')
 						buffer.put('v# ')
 						return
