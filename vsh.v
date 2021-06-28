@@ -282,11 +282,7 @@ fn event(e &tui.Event, x voidptr) {
 				else {
 					// run the command the user entered
 					// TODO: move this all to a function and make it more resilient
-					output := os.execute(cmd) or {
-						buffer.put('\n$err')
-						buffer.put('v# ')
-						return
-					}
+					output := os.execute(cmd)
 
 					// only save the command to history if it's not a blank line
 					// (example: the user just pressing enter won't append blank lines to the history file)
