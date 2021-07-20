@@ -325,7 +325,7 @@ fn event(e &tui.Event, x voidptr) {
 				mut cnt := hist.len
 
 				// var for the command to be displayed to the user
-				mut cmd := ''
+				cmd := ''
 
 				// this is the length of the current prompt 'v# '
 				if amount == 3 {
