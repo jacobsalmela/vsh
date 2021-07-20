@@ -242,7 +242,6 @@ fn (mut b Buffer) move_cursor(amount int, movement Movement) {
 fn (vsh &Vsh) view_width() int {
 	return vsh.tui.window_width
 }
-
 fn cmd_execute(mut h os.File, mut buffer &Buffer, cmd string) {
 	// write the command to the history file
 	h.writeln(cmd) or { panic(err) }
@@ -256,16 +255,15 @@ fn cmd_execute(mut h os.File, mut buffer &Buffer, cmd string) {
 	// return the prompt so another command can be entered
 	buffer.put('v# ')
 }
-
 fn event(e &tui.Event, x voidptr) {
 	mut vsh := &Vsh(x)
 	mut buffer := vsh.cur
 
-	// open the history file for appending commands to it
 	mut hist_append := os.open_append(os.join_path(os.home_dir(), '.v_history')) or {
 		vsh.cur.put('\nv# $err')
 		return
 	}
+
 	defer { hist_append.close() }
 
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
@@ -281,11 +279,18 @@ fn event(e &tui.Event, x voidptr) {
 				// the command is anything that's not our prompt
 				// TODO: use a var and don't hard code this, the prompt will be variable in length
 				cmd := buffer.cur_line()[3..]
-				if cmd == '' {
-					// if nothing was typed on the command line, return the prompt
-					buffer.put('\n')
-					buffer.put('v# ')
-				} else {
+
+				// split with a delimeter of space and then grab the first entry to see if it should be a builtin command
+				is_builtin := cmd.split(' ')[0]
+				// get the rest of the string which will be the args
+				cmd_args := cmd.split(' ')[1..]
+				match is_builtin {
+					// only use the first arg since you can't be in two dirs at once
+					'cd' { os.chdir(cmd.split(' ')[1])
+								 buffer.put('\nv# ') }
+					'pwd' { buffer.put('\n$os.getwd()\n')
+				 					buffer.put('\nv# ')}
+				else {
 					// run the command the user entered
 					cmd_execute(mut hist_append, mut buffer, cmd)
 				}
@@ -361,9 +366,9 @@ fn event(e &tui.Event, x voidptr) {
 			.down {
 				buffer.put('\nv# hist fwd')
 			}
-			// https://modules.vlang.io/term.ui.html#KeyCode
-			48...57, 65...90, 97...122 {
-				buffer.put(e.ascii.ascii_str()) // 0-9, A-Z, a-z
+			48...57, 65...90, 97...122 { // 0-9, A-Z, a-z
+				// buffer.put(e.utf8.bytes().bytestr())
+				buffer.put(e.ascii.ascii_str())
 			}
 			33...47, 58...64, 91...96, 123...126  { // special characters
 																							// !"#$%a'-./
@@ -375,7 +380,6 @@ fn event(e &tui.Event, x voidptr) {
 		else {
 			buffer.put('\nv# ')
 			buffer.put(e.ascii.ascii_str())
-			// https://modules.vlang.io/term.ui.html#Modifiers
 			// if e.modifiers != 0 {
 			// 	vsh.tui.write('\nModifiers: $e.modifiers = ')
 			// 	if e.modifiers & tui.ctrl != 0 {
@@ -391,7 +395,6 @@ fn event(e &tui.Event, x voidptr) {
 				// buffer.put(e.utf8.bytes().bytestr())
 			}
 		}
-	// display the accumulated print buffer to the screen
 	vsh.tui.flush()
 	}
 }
@@ -410,25 +413,15 @@ fn frame(x voidptr) {
 fn main() {
 	mut vsh := &Vsh{}
 	vsh.tui = tui.init(
-	  // a pointer to any user_data, it will be passed as the last argument to each callback
 		user_data: vsh
-		// a callback that will be called after initialization and before the first event / frame
-		init_fn: init
-		// a callback that will be fired on each frame, at a rate of frame_rate frames per second. event_fn fn(&Event, voidptr) - a callback that will be fired for every event received
-		frame_fn: frame
 		event_fn: event
-		// sets the title of the terminal window. This may be changed later, by calling the set_window_title() method
+		init_fn: init
+		frame_fn: frame
 		window_title: 'vsh'
-		// whether to hide the mouse cursor
 		hide_cursor: false
-		// sets the terminal into raw mode, which makes it intercept some escape codes such as ctrl + c and ctrl + z
 		capture_events: true
-		// the number of times per second that the frame callback will be fired. 30fps is a nice balance between smoothness and performance, but you can increase or lower it as you wish
-		frame_rate: 30
-		// a list of reset signals, to setup handlers to cleanup the terminal state when they're received. You should not need to change this, unless you know what you're doing.
-		// reset: [1, 2, 3, 4, 6, 7, 8, 9, 11, 13, 14, 15, 19]
-		// reset: []os.Signal{}
-		use_alternate_buffer: true
+		frame_rate: 120
+		use_alternate_buffer: false
 	)
 
 	// debug := true
