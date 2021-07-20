@@ -278,7 +278,7 @@ fn event(e &tui.Event, x voidptr) {
 			.enter {
 				// the command is anything that's not our prompt
 				// TODO: use a var and don't hard code this, the prompt will be variable in length
-				cmd := buffer.cur_line()[3..]
+				mut cmd := buffer.cur_line()[3..]
 
 				// split with a delimeter of space and then grab the first entry to see if it should be a builtin command
 				is_builtin := cmd.split(' ')[0]
