@@ -1,0 +1,23 @@
+name: test vsh
+on:
+  push:
+    # Require changes to the change log
+    paths:
+      - '.github/CHANGELOG.md'
+
+jobs:
+  build_and_test:
+    name: run
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup v
+        uses: nocturlab/setup-vlang-action@v1.2.1
+        with:
+          v-version: latest
+        id: v
+
+      - name: set up git repository
+        uses: actions/checkout@v2
+
+      - name: test
+        run: v test .
