@@ -1,8 +1,12 @@
 name: generate release
 on:
   push:
-    paths-ignore:
-      - '**.md'
+    # Require changes to the change log
+    paths:
+      - '**/CHANGELOG.md'
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -11,23 +15,38 @@ jobs:
     name: run
     runs-on: ubuntu-latest
     steps:
-    - name: set up git repository
-      uses: actions/checkout@v2
+      - name: verify semver bump in commit message
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '(^#)(\w)+ '
+          error: 'First line should bump semver: use "#patch|#minor|#major".'
 
-    - name: setup v
-      uses: nocturlab/setup-vlang-action@v1.2.1
-      with:
-        v-version: latest
-      id: v
+      # - name: check for resolves / fixes
+      #   uses: gsactions/commit-message-checker@v1
+      #   with:
+      #     pattern: '^.+(Resolves|Fixes): \#[0-9]+$'
+      #     error: 'You need at least one "Resolves|Fixes: #<issue number>" line.'
 
-    - name: build
-      run: v .
+      - name: setup v
+        uses: nocturlab/setup-vlang-action@v1.2.1
+        with:
+          v-version: latest
+        id: v
 
-    - name: upload compiled vsh artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: vsh
-        path: ./vsh
+      - name: set up git repository
+        uses: actions/checkout@v2
+
+      - name: test
+        run: v test .
+
+      - name: build
+        run: v .
+
+      - name: upload compiled vsh artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: vsh
+          path: ./vsh
 
 
   create_release:
