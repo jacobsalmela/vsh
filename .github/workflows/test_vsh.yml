@@ -1,6 +1,5 @@
 name: test vsh
 on:
-  push:
   pull_request:
     branches:
       - main
