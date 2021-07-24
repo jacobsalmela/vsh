@@ -1,2 +1,1 @@
-- update workflow to not run v tests on vlang
-- moved .enter commands into a function
+- update workflow for branches

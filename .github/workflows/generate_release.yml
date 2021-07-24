@@ -1,9 +1,6 @@
 name: generate release
 on:
   push:
-    # Require changes to the change log
-    paths:
-      - '.github/CHANGELOG.md'
     branches:
       - main
       - development
