@@ -1,1 +1,2 @@
-- read hist file in reverse in a loop so we can eventually cycle through them on each subsequent up arrow
+- update workflow to not run v tests on vlang
+- moved .enter commands into a function
