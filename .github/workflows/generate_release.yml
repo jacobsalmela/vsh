@@ -1,6 +1,6 @@
 name: generate release
 on:
-  pull_request:
+  push:
     # Require changes to the change log
     paths:
       - '.github/CHANGELOG.md'
