@@ -1,9 +1,10 @@
 name: test vsh
 on:
   push:
-    # Require changes to the change log
-    paths:
-      - '.github/CHANGELOG.md'
+  pull_request:
+    branches:
+      - main
+      - development
 
 jobs:
   build_and_test:
