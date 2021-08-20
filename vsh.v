@@ -105,9 +105,9 @@ fn (b Buffer) view(from int, to int) View {
 		}
 	}
 	raw := lines.join('\n')
-	return {
+	return View{
 		raw: raw
-		cursor: {
+		cursor: Cursor{
 			pos_x: x
 			// pos_y: b.cursor.pos_y
 		}
@@ -252,9 +252,6 @@ fn cmd_execute(mut h os.File, mut buffer &Buffer, cmd string) {
 
 	// Display the output even if the command failed (so the user can see the failure)
 	buffer.put('\n$output.output')
-
-	// return the prompt so another command can be entered
-	buffer.put('v# ')
 }
 
 fn event(e &tui.Event, x voidptr) {
@@ -288,6 +285,9 @@ fn event(e &tui.Event, x voidptr) {
 				} else {
 					// run the command the user entered
 					cmd_execute(mut hist_append, mut buffer, cmd)
+
+					// return the prompt so another command can be entered
+					buffer.put('v# ')
 				}
 			}
 			.space {
