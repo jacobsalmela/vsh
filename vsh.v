@@ -282,6 +282,12 @@ fn event(e &tui.Event, x voidptr) {
 					// if nothing was typed on the command line, return the prompt
 					buffer.put('\n')
 					buffer.put('v# ')
+				} else if cmd.split(' ')[0] == "cd" {
+					os.chdir(cmd.split(' ')[1])
+					buffer.put('v# ')
+				} else if cmd.split(' ')[0] == "pwd" {
+					buffer.put('\n$os.getwd()\n')
+					buffer.put('v# ')
 				} else {
 					// run the command the user entered
 					cmd_execute(mut hist_append, mut buffer, cmd)
