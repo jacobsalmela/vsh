@@ -284,7 +284,7 @@ fn event(e &tui.Event, x voidptr) {
 					buffer.put('v# ')
 				} else if cmd.split(' ')[0] == "cd" {
 					os.chdir(cmd.split(' ')[1])
-					buffer.put('v# ')
+					buffer.put('\nv# ')
 				} else if cmd.split(' ')[0] == "pwd" {
 					buffer.put('\n$os.getwd()\n')
 					buffer.put('v# ')
