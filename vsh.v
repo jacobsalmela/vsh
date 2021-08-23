@@ -288,6 +288,8 @@ fn event(e &tui.Event, x voidptr) {
 				} else if cmd.split(' ')[0] == "pwd" {
 					buffer.put('\n$os.getwd()\n')
 					buffer.put('v# ')
+				} else if cmd.split(' ')[0] == "exit" {
+					exit(0)
 				} else {
 					// run the command the user entered
 					cmd_execute(mut hist_append, mut buffer, cmd)
