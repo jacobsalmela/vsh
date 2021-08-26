@@ -22,19 +22,17 @@ It the wild west right now, so just make a PR and we'll get it merged in.
 ## Building
 
 ```bash
-# clone to a folder of your choosing, which is already in your $PATH or can be added to it
+# clone v to a folder you are in
 git clone https://github.com/vlang/v.git v-vsh
-# add the dir to your path is necessary so you can run 'v' without needing a path
-echo $PATH:/path/to/v-vsh >> ~/.bash_profile
 pushd v-vsh
   # workaround for unsolved bug, #24
   sed -i.bak 's/c.paused = true/c.paused = false/' vlib/term/ui/termios_nix.c.v
   make
 popd
 
-../v-vsh/v
+git clone https://github.com/jacobsalmela/vsh.git
 pushd vsh
-  v .
+  ../v-vsh/v .
 popd
 ```
 
