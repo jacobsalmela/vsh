@@ -3,25 +3,12 @@ on:
   push:
     branches:
       - main
-      - development
 
 jobs:
   build_and_test:
     name: run
     runs-on: ubuntu-latest
     steps:
-      - name: verify semver bump in commit message
-        uses: gsactions/commit-message-checker@v1
-        with:
-          pattern: '(^#)(\w)+ '
-          error: 'First line should bump semver: use "#patch|#minor|#major".'
-
-      # - name: check for resolves / fixes
-      #   uses: gsactions/commit-message-checker@v1
-      #   with:
-      #     pattern: '^.+(Resolves|Fixes): \#[0-9]+$'
-      #     error: 'You need at least one "Resolves|Fixes: #<issue number>" line.'
-
       - name: setup v
         uses: nocturlab/setup-vlang-action@v1.2.1
         with:
@@ -59,6 +46,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.AP_GITHUB_TOKEN }}
           WITH_V: true
+          DEFAULT_BUMP: patch
+          RELEASE_BRANCHES: release*
+          # DRY_RUN: true
 
       - name: adjust permissions
         run: |

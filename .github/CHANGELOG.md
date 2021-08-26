@@ -1,1 +1,3 @@
-- update workflow for branches
+- update workflow
+- added build instructions
+- fix after recent v changes
