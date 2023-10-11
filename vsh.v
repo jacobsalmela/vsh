@@ -18,8 +18,8 @@ import term.ui as tui
 
 struct Vsh {
 mut:
-	tui           &tui.Context  = 0
-	cur           &Buffer       = 0
+	tui           &tui.Context = unsafe { nil }
+	cur           &Buffer      = unsafe { nil }
 	magnet_x      int
 	viewport      int
 }
@@ -74,7 +74,7 @@ fn (mut vsh Vsh) magnet_cursor_x() {
 
 // App callbacks
 fn init(x voidptr) {
-	mut vsh := &Vsh(x)
+	mut vsh := unsafe { &Vsh(x) }
 	vsh.init_shell()
 }
 
@@ -255,7 +255,7 @@ fn cmd_execute(mut h os.File, mut buffer &Buffer, cmd string) {
 }
 
 fn event(e &tui.Event, x voidptr) {
-	mut vsh := &Vsh(x)
+	mut vsh := unsafe { &Vsh(x) }
 	mut buffer := vsh.cur
 
 	// open the history file for appending commands to it
@@ -405,7 +405,7 @@ fn event(e &tui.Event, x voidptr) {
 }
 
 fn frame(x voidptr) {
-	mut vsh := &Vsh(x)
+	mut vsh := unsafe { &Vsh(x) }
 	mut cur := vsh.cur
 	vsh.tui.clear()
 	scroll_limit := vsh.view_width()
@@ -440,5 +440,5 @@ fn main() {
 	)
 
 	// debug := true
-	vsh.tui.run() ?
+	vsh.tui.run()!
 }
