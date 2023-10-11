@@ -1,6 +1,6 @@
-// vsh.v -- Runs v shell
-
-/* This file is part of vsh, the V SHell.
+// vsh.v -- Runs v shell/*
+/*
+This file is part of vsh, the V SHell.
 
 	MIT License
 
@@ -12,16 +12,15 @@
 
 	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-
-import os { input, execute, user_os, join_path home_dir }
+import os { execute, home_dir, join_path }
 import term.ui as tui
 
 struct Vsh {
 mut:
-	tui           &tui.Context = unsafe { nil }
-	cur           &Buffer      = unsafe { nil }
-	magnet_x      int
-	viewport      int
+	tui      &tui.Context = unsafe { nil }
+	cur      &Buffer      = unsafe { nil }
+	magnet_x int
+	viewport int
 }
 
 struct View {
@@ -163,7 +162,7 @@ fn (mut b Buffer) put(s string) {
 	}
 	$if debug {
 		flat := s.replace('\n', r'\n')
-		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "$flat"')
+		eprintln(@MOD + '.' + @STRUCT + '::' + @FN + ' "${flat}"')
 	}
 }
 
@@ -205,10 +204,10 @@ fn (mut b Buffer) del(amount int) string {
 		for li := y; li >= 0 && left > 0; li++ {
 			ln := b.lines[li]
 			if x == ln.len { // at line end
-					b.lines[li] = ln + b.lines[y + 1]
-					b.lines.delete(y + 1)
-					left--
-					b.del(left)
+				b.lines[li] = ln + b.lines[y + 1]
+				b.lines.delete(y + 1)
+				left--
+				b.del(left)
 			} else if left > ln.len {
 				b.lines.delete(li)
 				left -= ln.len
@@ -243,15 +242,15 @@ fn (vsh &Vsh) view_width() int {
 	return vsh.tui.window_width
 }
 
-fn cmd_execute(mut h os.File, mut buffer &Buffer, cmd string) {
+fn cmd_execute(mut h os.File, mut buffer Buffer, cmd string) {
 	// write the command to the history file
 	h.writeln(cmd) or { panic(err) }
 
 	// run the command the user entered
-	mut output := os.execute(cmd)
+	mut output := execute(cmd)
 
 	// Display the output even if the command failed (so the user can see the failure)
-	buffer.put('\n$output.output')
+	buffer.put('\n${output.output}')
 }
 
 fn event(e &tui.Event, x voidptr) {
@@ -259,11 +258,13 @@ fn event(e &tui.Event, x voidptr) {
 	mut buffer := vsh.cur
 
 	// open the history file for appending commands to it
-	mut hist_append := os.open_append(os.join_path(os.home_dir(), '.v_history')) or {
-		vsh.cur.put('\nv# $err')
+	mut hist_append := os.open_append(join_path(home_dir(), '.v_history')) or {
+		vsh.cur.put('\nv# ${err}')
 		return
 	}
-	defer { hist_append.close() }
+	defer {
+		hist_append.close()
+	}
 
 	// vsh.tui.write('\nv# "$e.utf8.bytes().hex()" = $e.utf8.bytes()')
 	vsh.tui.write('\nv# ')
@@ -282,13 +283,13 @@ fn event(e &tui.Event, x voidptr) {
 					// if nothing was typed on the command line, return the prompt
 					buffer.put('\n')
 					buffer.put('v# ')
-				} else if cmd.split(' ')[0] == "cd" {
+				} else if cmd.split(' ')[0] == 'cd' {
 					os.chdir(cmd.split(' ')[1]) or {}
 					buffer.put('\nv# ')
-				} else if cmd.split(' ')[0] == "pwd" {
-					buffer.put('\n$os.getwd()\n')
+				} else if cmd.split(' ')[0] == 'pwd' {
+					buffer.put('\n${os.getwd()}\n')
 					buffer.put('v# ')
-				} else if cmd.split(' ')[0] == "exit" {
+				} else if cmd.split(' ')[0] == 'exit' {
 					exit(0)
 				} else {
 					// run the command the user entered
@@ -315,7 +316,7 @@ fn event(e &tui.Event, x voidptr) {
 			}
 			.up {
 				// open the history file
-				h_file := os.join_path(os.home_dir(), '.v_history').str()
+				h_file := join_path(home_dir(), '.v_history').str()
 				hist := os.read_file(h_file) or { panic(err) }
 
 				// get the length of the current line
@@ -338,14 +339,18 @@ fn event(e &tui.Event, x voidptr) {
 					for l in hist.bytes().reverse() {
 						// add the character to the command var
 						cmd += l.ascii_str()
+
 						// if we hit a newline, the command is complete, but backwards
 						if l.ascii_str() == '\n' {
 							// subtract from the length of the array
 							cnt--
+
 							// increment the loop
 							i++
+
 							// display the command in reverse (which shows it correctly)
 							buffer.put('v# ${cmd.reverse()}')
+
 							// clear the command var for the next command
 							cmd = ''
 						}
@@ -354,6 +359,7 @@ fn event(e &tui.Event, x voidptr) {
 				} else {
 					// delete the entire line
 					buffer.del(-amount)
+
 					// TODO: Make this into a function since it's the same as above
 					for l in hist.bytes().reverse() {
 						cmd += l.ascii_str()
@@ -373,34 +379,36 @@ fn event(e &tui.Event, x voidptr) {
 			48...57, 65...90, 97...122 {
 				buffer.put(e.ascii.ascii_str()) // 0-9, A-Z, a-z
 			}
-			33...47, 58...64, 91...96, 123...126  { // special characters
-																							// !"#$%a'-./
-																							// :;<=>?@
-																							// [\]^_`
-																							// {\}~
+			33...47, 58...64, 91...96, 123...126 { // special characters
+				// !"#$%a'-./
+				// :;<=>?@
+				// [\]^_`
+				// {\}~
 				buffer.put(e.ascii.ascii_str())
 			}
-		else {
-			buffer.put('\nv# ')
-			buffer.put(e.ascii.ascii_str())
-			// https://modules.vlang.io/term.ui.html#Modifiers
-			// if e.modifiers != 0 {
-			// 	vsh.tui.write('\nModifiers: $e.modifiers = ')
-			// 	if e.modifiers & tui.ctrl != 0 {
-			// 		vsh.tui.write('ctrl. ')
-			// 	}
-			// 	if e.modifiers & tui.shift != 0 {
-			// 		vsh.tui.write('shift ')
-			// 	}
-			// 	if e.modifiers & tui.alt != 0 {
-			// 		vsh.tui.write('alt. ')
-			// 	}
-			// }
+			else {
+				buffer.put('\nv# ')
+				buffer.put(e.ascii.ascii_str())
+
+				// https://modules.vlang.io/term.ui.html#Modifiers
+				// if e.modifiers != 0 {
+				// 	vsh.tui.write('\nModifiers: $e.modifiers = ')
+				// 	if e.modifiers & tui.ctrl != 0 {
+				// 		vsh.tui.write('ctrl. ')
+				// 	}
+				// 	if e.modifiers & tui.shift != 0 {
+				// 		vsh.tui.write('shift ')
+				// 	}
+				// 	if e.modifiers & tui.alt != 0 {
+				// 		vsh.tui.write('alt. ')
+				// 	}
+				// }
 				// buffer.put(e.utf8.bytes().bytestr())
 			}
 		}
-	// display the accumulated print buffer to the screen
-	vsh.tui.flush()
+
+		// display the accumulated print buffer to the screen
+		vsh.tui.flush()
 	}
 }
 
@@ -418,7 +426,7 @@ fn frame(x voidptr) {
 fn main() {
 	mut vsh := &Vsh{}
 	vsh.tui = tui.init(
-	  // a pointer to any user_data, it will be passed as the last argument to each callback
+		// a pointer to any user_data, it will be passed as the last argument to each callback
 		user_data: vsh
 		// a callback that will be called after initialization and before the first event / frame
 		init_fn: init
